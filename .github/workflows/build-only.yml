@@ -1,0 +1,50 @@
+name: Build (artifact only)
+
+  on:
+    workflow_dispatch:
+
+  permissions:
+    contents: read
+
+  jobs:
+    build:
+      runs-on: windows-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+
+        - name: Setup Rust
+          uses: dtolnay/rust-toolchain@stable
+
+        - name: Cache Rust build
+          uses: Swatinem/rust-cache@v2
+          with:
+            workspaces: '. -> target'
+
+        - name: Install deps
+          run: npm ci
+
+        - name: Disable updater signing (artifact-only build)
+          shell: pwsh
+          run: |
+            $p = 'src-tauri/tauri.conf.json'
+            (Get-Content $p -Raw) `
+              -replace '"createUpdaterArtifacts":\s*true', '"createUpdaterArtifacts": false' `
+             | Set-Content $p -NoNewline
+
+        - name: Build NextGestures
+          run: npm run tauri build
+
+        - name: Upload green exe
+          uses: actions/upload-artifact@v4
+          with:
+            name: NextGestures-portable-exe
+            path: src-tauri/target/release/NextGestures.exe
+            if-no-files-found: error
+
+        - name: Upload NSIS installer
+          uses: actions/upload-artifact@v4
+          with:
+            name: NextGestures-setu
