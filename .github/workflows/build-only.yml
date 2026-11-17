@@ -11,14 +11,14 @@ jobs:
       runs-on: windows-latest
       steps:
         - name: Checkout
-          uses: actions/checkout@v4
+          uses: actions/checkout@v5
           with:
             fetch-depth: 0
 
         - name: Setup Node
-          uses: actions/setup-node@v4
+          uses: actions/setup-node@v5
           with:
-            node-version: '20'
+            node-version: '22'
             cache: 'npm'
 
         - name: Setup Rust
@@ -47,7 +47,7 @@ jobs:
           shell: pwsh
           run: |
             Write-Host "--- top-level .exe in target/release ---"
-            Get-ChildItem -Path src-tauri/target/release -Filter *.exe -File |
+            Get-ChildItem -Path target/release -Filter *.exe -File |
               Where-Object { $_.DirectoryName -match 'release$' } |
               Select-Object Name, Length | Format-Table -AutoSize
 
@@ -56,13 +56,13 @@ jobs:
           with:
             name: NextGestures-portable-exe
             path: |
-              src-tauri/target/release/NextGestures.exe
-              src-tauri/target/release/next-gestures.exe
+              target/release/NextGestures.exe
+              target/release/next-gestures.exe
             if-no-files-found: error
 
         - name: Upload NSIS installer
           uses: actions/upload-artifact@v4
           with:
             name: NextGestures-setup-exe
-            path: src-tauri/target/release/bundle/nsis/*.exe
+            path: target/release/bundle/nsis/*.exe
             if-no-files-found: warn
